@@ -3,9 +3,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tooth_tech/screens/homescreen.dart';
 import 'package:tooth_tech/utils/custombutton.dart';
 import 'package:tooth_tech/utils/pallete.dart';
+import 'package:mssql_connection/mssql_connection.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  final MssqlConnection mssqlConnection;
+
+  const LoginScreen({Key? key, required this.mssqlConnection})
+      : super(key: key);
+
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+  String _message = '';
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +93,7 @@ class LoginScreen extends StatelessWidget {
                     left: 20,
                   ),
                   child: TextField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                         labelText: "Email",
                         floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -110,6 +124,7 @@ class LoginScreen extends StatelessWidget {
                     left: 20,
                   ),
                   child: TextField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                         labelText: "Password",
                         floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -129,27 +144,48 @@ class LoginScreen extends StatelessWidget {
               height: 40,
             ),
             CustomButton(
-                route:
-                    MaterialPageRoute(builder: (context) => const HomeScreen()),
-                label: 'Login'),
+              onPressed: _login,
+              label: 'Login',
+            ),
             const SizedBox(
               height: 20,
             ),
-            TextButton(
-              onPressed: () {},
-              child: const Text(
-                "Don't have an account? Register",
-                style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
-                  color: Pallete.primaryColor,
-                ),
+            Text(
+              _message,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: Pallete.primaryColor,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _login() async {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    String query =
+        'SELECT * FROM login WHERE userid = "$email" AND pass = "$password"';
+    String result = await widget.mssqlConnection.getData(query);
+
+    if (result.isNotEmpty) {
+      setState(() {
+        _message = 'Login successful!';
+      });
+      // Redirect to home screen after a delay
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => HomeScreen()));
+      });
+    } else {
+      setState(() {
+        _message = 'Invalid email or password';
+      });
+    }
   }
 }
