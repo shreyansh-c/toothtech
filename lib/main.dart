@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mssql_connection/mssql_connection.dart';
 import 'package:tooth_tech/screens/loginscreen.dart';
+import 'package:tooth_tech/screens/registration.dart';
 
 void main() {
   runApp(MyApp());
@@ -44,10 +45,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Your App Name',
+      title: 'ToothTech',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
       home: LoginScreen(mssqlConnection: mssqlConnection),
     );

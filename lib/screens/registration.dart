@@ -5,16 +5,16 @@ import 'package:tooth_tech/utils/custombutton.dart';
 import 'package:tooth_tech/utils/pallete.dart';
 import 'package:mssql_connection/mssql_connection.dart';
 
-class LoginScreen extends StatefulWidget {
+class PatientRegistration extends StatefulWidget {
   final MssqlConnection mssqlConnection;
 
-  const LoginScreen({super.key, required this.mssqlConnection});
+  const PatientRegistration({super.key, required this.mssqlConnection});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _PatientRegistrationState createState() => _PatientRegistrationState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _PatientRegistrationState extends State<PatientRegistration> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _message = '';
@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Login Now!',
+                        'New Registration',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w500,
@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       Text(
-                        'Enter Your Credentials to Login',
+                        'Setup Your Login Credentials',
                         style: TextStyle(
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w600,
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
-                          labelText: "Email",
+                          labelText: "Enter your email address",
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           labelStyle: GoogleFonts.poppins(
                             fontSize: 14.0,
@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: TextField(
                       controller: _passwordController,
                       decoration: InputDecoration(
-                          labelText: "Password",
+                          labelText: "Enter a password",
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           labelStyle: GoogleFonts.poppins(
                             fontSize: 14.0,
@@ -144,8 +144,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: 40,
               ),
               CustomButton(
-                onPressed: _login,
-                label: 'Login',
+                onPressed: _register,
+                label: 'Register',
               ),
               const SizedBox(
                 height: 20,
@@ -166,25 +166,42 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login() async {
+  void _register() async {
     String email = _emailController.text.trim();
-    //String password = _passwordController.text.trim();
+    String password = _passwordController.text.trim();
 
-    String query = 'SELECT userId FROM login WHERE userId = \'$email\'';
-    String result = await widget.mssqlConnection.getData(query);
+    String emailQuery = 'SELECT userId FROM login WHERE userId = \'$email\'';
+    String emailResult = await widget.mssqlConnection.getData(emailQuery);
 
-    if (result.isNotEmpty) {
+    if (emailResult == email) {
       setState(() {
-        _message = 'Login successful!';
-      });
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()));
+        _message = 'Email already exists!';
       });
     } else {
-      setState(() {
-        _message = 'Invalid email or password';
-      });
+      if (password.isEmpty || password.length < 6) {
+        setState(() {
+          _message = 'Password must be at least 6 characters long!';
+        });
+      } else {
+        String insertQuery =
+            'INSERT INTO login (userId, pass) VALUES (\'$email\', \'$password\')';
+        String insertResult =
+            await widget.mssqlConnection.writeData(insertQuery);
+
+        if (insertResult.isNotEmpty) {
+          setState(() {
+            _message = 'Registration successful!';
+          });
+          Future.delayed(const Duration(seconds: 1), () {
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const HomeScreen()));
+          });
+        } else {
+          setState(() {
+            _message = 'Registration failed!';
+          });
+        }
+      }
     }
   }
 }
